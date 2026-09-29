@@ -1,4 +1,5 @@
 use clap::{Args, Parser, Subcommand};
+use todo::{get_tasks, print_tasks};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -15,6 +16,9 @@ enum Commands {
 
     /// Deletes a task by id
     Delete(DeleteArgs),
+
+    /// Toggles task complete status
+    Complete,
 
     /// List tasks
     List(ListArgs),
@@ -33,6 +37,9 @@ struct DeleteArgs {
     id: u32,
 }
 
+// #[derive(Args)]
+// struct CompleteArgs {}
+
 #[derive(Args)]
 struct ListArgs {
     #[arg(short = 'c', long = "completed")]
@@ -42,7 +49,7 @@ struct ListArgs {
     all_items: bool,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match &cli.command {
@@ -55,7 +62,6 @@ fn main() {
 
             match task {
                 Ok(_) => {
-                    dbg!(&task);
                     println!("[ADD] New task added.");
                 }
                 Err(err) => {
@@ -68,15 +74,20 @@ fn main() {
         }
         Commands::List(list_arg) => {
             let tasks = if list_arg.all_items {
-                todo::get_tasks(true, false)
+                get_tasks(true, false)?
             } else if list_arg.completed {
-                todo::get_tasks(false, true)
+                get_tasks(false, true)?
             } else {
-                todo::get_tasks(false, false)
+                get_tasks(false, false)?
             };
 
-            dbg!(&tasks);
-            println!("[LIST] Listing Tasks");
+            print_tasks(&tasks);
+            // println!("[LIST] Listing Tasks");
+        }
+        Commands::Complete => {
+            todo!()
         }
     }
-}
+
+    Ok(())
+} // [X] <id> | Task

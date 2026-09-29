@@ -14,7 +14,6 @@ pub fn add_task(title: &str, is_daily: bool) -> Result<(), Box<dyn std::error::E
     };
 
     save_task(new_task)?;
-    println!("[ADD] Task add successful");
     Ok(())
 }
 
@@ -32,4 +31,32 @@ pub fn get_tasks(all: bool, completed: bool) -> Result<Vec<Task>, Box<dyn std::e
     } else {
         list_tasks(TaskListFilter::Remaining)
     }
+}
+
+pub fn print_tasks(tasks: &Vec<Task>) {
+    let mut basic_tasks = String::new();
+    let mut daily_tasks = String::new();
+
+    for task in tasks {
+        match task.task_type {
+            task::TaskType::Basic => {
+                basic_tasks.push_str(
+                    &format!("[{0}] {1} | {2}\n", task.is_completed, task.id, task.title)
+                        .to_string(),
+                );
+            }
+            task::TaskType::Daily => {
+                daily_tasks.push_str(
+                    &format!("[{0}] {1} | {2}\n", task.is_completed, task.id, task.title)
+                        .to_string(),
+                );
+            }
+        }
+    }
+
+    println!("-----Basic tasks-----");
+    println!("{basic_tasks}");
+
+    println!("-----Daily tasks-----");
+    println!("{daily_tasks}");
 }

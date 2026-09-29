@@ -24,8 +24,6 @@ pub fn save_task(task: Task) -> Result<(), Box<dyn std::error::Error>> {
     let mut tasks = list_tasks(TaskListFilter::All)?;
     tasks.push(task.clone());
 
-    dbg!(&tasks);
-
     let file = File::create(&path)?;
     let writer = BufWriter::new(file);
     serde_json::to_writer_pretty(writer, &tasks)?;
