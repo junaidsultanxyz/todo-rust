@@ -31,6 +31,16 @@ pub fn save_task(task: Task) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+pub fn modify_tasks(tasks: Vec<Task>) -> Result<(), Box<dyn std::error::Error>> {
+    let path = get_path()?;
+
+    let file = File::create(&path)?;
+    let writer = BufWriter::new(file);
+    serde_json::to_writer_pretty(writer, &tasks)?;
+
+    Ok(())
+}
+
 pub enum TaskListFilter {
     All,
     Completed,

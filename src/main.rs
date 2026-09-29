@@ -1,5 +1,5 @@
 use clap::{Args, Parser, Subcommand};
-use todo::{get_tasks, print_tasks};
+use todo::{clear_list, delete_task, get_tasks, print_tasks, toggle_task_status};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -17,11 +17,16 @@ enum Commands {
     /// Deletes a task by id
     Delete(DeleteArgs),
 
-    /// Toggles task complete status
-    Complete,
+    /// Marks task as complete
+    Done(DoneArgs),
+
+    /// Marks task as incomplete
+    Undone(UndoneArgs),
 
     /// List tasks
     List(ListArgs),
+
+    Clear,
 }
 
 #[derive(Args)]
@@ -34,11 +39,18 @@ struct AddArgs {
 
 #[derive(Args)]
 struct DeleteArgs {
-    id: u32,
+    id: String,
 }
 
-// #[derive(Args)]
-// struct CompleteArgs {}
+#[derive(Args)]
+struct DoneArgs {
+    id: String,
+}
+
+#[derive(Args)]
+struct UndoneArgs {
+    id: String,
+}
 
 #[derive(Args)]
 struct ListArgs {
@@ -70,7 +82,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Commands::Delete(task) => {
-            println!("[DELETE] deleted task with id '{}'", task.id)
+            match delete_task(&task.id)? {
+                Some(task_ok) => {
+                    println!("[DELETE] Task {} deleted successfully.", task_ok.id);
+                }
+                None => {
+                    println!("[FAIL] Could not find task with id {}", task.id);
+                }
+            };
         }
         Commands::List(list_arg) => {
             let tasks = if list_arg.all_items {
@@ -84,10 +103,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             print_tasks(&tasks);
             // println!("[LIST] Listing Tasks");
         }
-        Commands::Complete => {
-            todo!()
+        Commands::Done(task) => match toggle_task_status(&task.id, true)? {
+            true => println!("[COMPLETE] Task {} marked as complete.", task.id),
+            false => println!("[FAIL] failed to find task with id {}.", task.id),
+        },
+        Commands::Undone(task) => match toggle_task_status(&task.id, false)? {
+            true => println!("[COMPLETE] Task {} marked as incomplete.", task.id),
+            false => println!("[FAIL] failed to find task with id {}.", task.id),
+        },
+        Commands::Clear => {
+            clear_list()?;
+            println!("[CLEAR] cleared all tasks")
         }
     }
 
     Ok(())
-} // [X] <id> | Task
+}
