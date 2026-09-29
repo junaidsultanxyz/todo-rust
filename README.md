@@ -12,6 +12,20 @@ For tasks which are marked as daily, the completion status resets everyday at 00
 
 ---
 
+## Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/junaidsultanxyz/todo-rust
+   cd todo-rust
+   ```
+2. Install using Cargo
+   ```bash
+   cargo install --path .
+   ```
+
+---
+
 ## Usage Commands
 
 ```
