@@ -46,27 +46,37 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Add(task) => {
-            println!(
-                "[ADD] added task '{}' and is_daily is '{}'",
-                task.name, task.is_daily
-            );
+        Commands::Add(task_args) => {
+            let task = if task_args.is_daily {
+                todo::add_task(&task_args.name, true)
+            } else {
+                todo::add_task(&task_args.name, false)
+            };
+
+            match task {
+                Ok(_) => {
+                    dbg!(&task);
+                    println!("[ADD] New task added.");
+                }
+                Err(err) => {
+                    println!("[ERROR] Error while adding new task. {}", err);
+                }
+            }
         }
         Commands::Delete(task) => {
             println!("[DELETE] deleted task with id '{}'", task.id)
         }
         Commands::List(list_arg) => {
-            println!(
-                "[LIST] listing {1} the {0} items",
-                {
-                    if list_arg.completed {
-                        "completed"
-                    } else {
-                        "remaining"
-                    }
-                },
-                { if list_arg.all_items { "all" } else { "only" } }
-            );
+            let tasks = if list_arg.all_items {
+                todo::get_tasks(true, false)
+            } else if list_arg.completed {
+                todo::get_tasks(false, true)
+            } else {
+                todo::get_tasks(false, false)
+            };
+
+            dbg!(&tasks);
+            println!("[LIST] Listing Tasks");
         }
     }
 }
