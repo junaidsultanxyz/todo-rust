@@ -29,6 +29,7 @@ enum Commands {
     /// List tasks
     List(ListArgs),
 
+    /// Deletes all tasks
     Clear,
 }
 
