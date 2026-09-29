@@ -1,5 +1,8 @@
 use clap::{Args, Parser, Subcommand};
-use todo::{clear_list, delete_task, get_tasks, print_tasks, toggle_task_status};
+use todo::{
+    TaskListFilter, clear_list, delete_task, get_tasks, print_tasks, task::TaskType,
+    toggle_task_status,
+};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -59,6 +62,12 @@ struct ListArgs {
 
     #[arg(short = 'a', long = "all")]
     all_items: bool,
+
+    #[arg(short = 'd', long = "daily")]
+    daily: bool,
+
+    #[arg(short = 'b', long = "basic")]
+    basic: bool,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -92,16 +101,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
         }
         Commands::List(list_arg) => {
-            let tasks = if list_arg.all_items {
-                get_tasks(true, false)?
+            let filter = if list_arg.all_items {
+                TaskListFilter::All
             } else if list_arg.completed {
-                get_tasks(false, true)?
+                TaskListFilter::Completed
             } else {
-                get_tasks(false, false)?
+                TaskListFilter::Remaining
             };
 
+            let task_type: Option<TaskType> = if list_arg.daily {
+                Some(TaskType::Daily)
+            } else if list_arg.basic {
+                Some(TaskType::Basic)
+            } else {
+                None
+            };
+
+            let tasks = get_tasks(filter, task_type)?;
+
             print_tasks(&tasks);
-            // println!("[LIST] Listing Tasks");
         }
         Commands::Done(task) => match toggle_task_status(&task.id, true)? {
             true => println!("[COMPLETE] Task {} marked as complete.", task.id),

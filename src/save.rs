@@ -21,7 +21,7 @@ fn get_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
 pub fn save_task(task: Task) -> Result<(), Box<dyn std::error::Error>> {
     let path = get_path()?;
 
-    let mut tasks = list_tasks(TaskListFilter::All)?;
+    let mut tasks = load_tasks()?;
     tasks.push(task.clone());
 
     let file = File::create(&path)?;
@@ -41,12 +41,7 @@ pub fn modify_tasks(tasks: Vec<Task>) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
-pub enum TaskListFilter {
-    All,
-    Completed,
-    Remaining,
-}
-pub fn list_tasks(filter: TaskListFilter) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
+pub fn load_tasks() -> Result<Vec<Task>, Box<dyn std::error::Error>> {
     let path = get_path()?;
     if !path.exists() {
         if let Some(parent) = path.parent() {
@@ -64,15 +59,6 @@ pub fn list_tasks(filter: TaskListFilter) -> Result<Vec<Task>, Box<dyn std::erro
         Err(_) => {
             return Ok(Vec::new());
         }
-    };
-
-    let tasks = match filter {
-        TaskListFilter::All => tasks,
-        TaskListFilter::Completed => tasks.into_iter().filter(|task| task.is_completed).collect(),
-        TaskListFilter::Remaining => tasks
-            .into_iter()
-            .filter(|task| !task.is_completed)
-            .collect(),
     };
 
     Ok(tasks)

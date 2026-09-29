@@ -1,10 +1,10 @@
 use crate::{
-    save::{TaskListFilter, list_tasks, modify_tasks, save_task},
-    task::Task,
+    save::{load_tasks, modify_tasks, save_task},
+    task::{Task, TaskType},
 };
 
 mod save;
-mod task;
+pub mod task;
 
 pub fn add_task(title: &str, is_daily: bool) -> Result<(), Box<dyn std::error::Error>> {
     let new_task = if is_daily {
@@ -18,7 +18,7 @@ pub fn add_task(title: &str, is_daily: bool) -> Result<(), Box<dyn std::error::E
 }
 
 pub fn delete_task(id: &str) -> Result<Option<Task>, Box<dyn std::error::Error>> {
-    let mut tasks = list_tasks(TaskListFilter::All)?;
+    let mut tasks = load_tasks()?;
     if let Some(index) = tasks.iter().position(|task| task.id == id) {
         let removed_item = tasks.remove(index);
 
@@ -30,7 +30,7 @@ pub fn delete_task(id: &str) -> Result<Option<Task>, Box<dyn std::error::Error>>
 }
 
 pub fn toggle_task_status(id: &str, status: bool) -> Result<bool, Box<dyn std::error::Error>> {
-    let mut tasks = list_tasks(TaskListFilter::All)?;
+    let mut tasks = load_tasks()?;
 
     for task in tasks.iter_mut() {
         if task.id == id {
@@ -43,14 +43,35 @@ pub fn toggle_task_status(id: &str, status: bool) -> Result<bool, Box<dyn std::e
     Ok(false)
 }
 
-pub fn get_tasks(all: bool, completed: bool) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
-    if all {
-        list_tasks(TaskListFilter::All)
-    } else if completed {
-        list_tasks(TaskListFilter::Completed)
-    } else {
-        list_tasks(TaskListFilter::Remaining)
-    }
+pub enum TaskListFilter {
+    All,
+    Completed,
+    Remaining,
+}
+pub fn get_tasks(
+    filter: TaskListFilter,
+    task_type: Option<TaskType>,
+) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
+    let tasks = load_tasks()?;
+
+    let tasks = match filter {
+        TaskListFilter::All => tasks,
+        TaskListFilter::Completed => tasks.into_iter().filter(|task| task.is_completed).collect(),
+        TaskListFilter::Remaining => tasks
+            .into_iter()
+            .filter(|task| !task.is_completed)
+            .collect(),
+    };
+
+    let tasks = match task_type {
+        Some(task_type) => tasks
+            .into_iter()
+            .filter(|task| task.task_type == task_type)
+            .collect(),
+        None => tasks,
+    };
+
+    Ok(tasks)
 }
 
 pub fn clear_list() -> Result<(), Box<dyn std::error::Error>> {

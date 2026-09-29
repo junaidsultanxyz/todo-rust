@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskType {
     Basic,
