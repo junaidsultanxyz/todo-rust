@@ -1,6 +1,6 @@
 [package]
 name = "todo"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Junaid Sultan <contact@junaidsultan.com>"]
 description = "Simple todo with daily tasks. Library + CLI"
