@@ -34,7 +34,12 @@ pub fn toggle_task_status(id: &str, status: bool) -> Result<bool, Box<dyn std::e
 
     for task in tasks.iter_mut() {
         if task.id == id {
-            task.is_completed = status;
+            if status {
+                task.complete();
+            } else {
+                task.uncomplete();
+            }
+
             modify_tasks(tasks)?;
             return Ok(true);
         }
@@ -56,10 +61,13 @@ pub fn get_tasks(
 
     let tasks = match filter {
         TaskListFilter::All => tasks,
-        TaskListFilter::Completed => tasks.into_iter().filter(|task| task.is_completed).collect(),
+        TaskListFilter::Completed => tasks
+            .into_iter()
+            .filter(|task| task.is_completed())
+            .collect(),
         TaskListFilter::Remaining => tasks
             .into_iter()
-            .filter(|task| !task.is_completed)
+            .filter(|task| !task.is_completed())
             .collect(),
     };
 
@@ -82,30 +90,28 @@ pub fn clear_list() -> Result<(), Box<dyn std::error::Error>> {
 
 // utility functions
 
-pub fn print_tasks(tasks: &Vec<Task>) {
-    let mut basic_tasks = String::new();
-    let mut daily_tasks = String::new();
+pub fn print_tasks(tasks: &[Task]) {
+    let (daily_tasks, basic_tasks): (Vec<&Task>, Vec<&Task>) = tasks
+        .iter()
+        .partition(|t| matches!(t.task_type, TaskType::Daily));
 
-    for task in tasks {
-        match task.task_type {
-            task::TaskType::Basic => {
-                basic_tasks.push_str(
-                    &format!("[{0}] {1} | {2}\n", task.is_completed, task.id, task.title)
-                        .to_string(),
-                );
-            }
-            task::TaskType::Daily => {
-                daily_tasks.push_str(
-                    &format!("[{0}] {1} | {2}\n", task.is_completed, task.id, task.title)
-                        .to_string(),
-                );
-            }
-        }
+    print_section("Daily Tasks", &daily_tasks);
+    print_section("Basic Tasks", &basic_tasks);
+}
+
+fn print_section(header: &str, tasks: &[&Task]) {
+    println!("─── {header} ───");
+
+    if tasks.is_empty() {
+        println!("  (none)\n");
+        return;
     }
 
-    println!("-----Basic tasks-----");
-    println!("{basic_tasks}");
+    for task in tasks {
+        let status = if task.is_completed() { "X" } else { " " };
+        // Aligns ID to at least 3 digits (e.g., "  1", " 10", "100")
+        println!("  [{status}] {:<3} │ {}", task.id, task.title);
+    }
 
-    println!("-----Daily tasks-----");
-    println!("{daily_tasks}");
+    println!();
 }
